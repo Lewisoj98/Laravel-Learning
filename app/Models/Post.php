@@ -30,7 +30,9 @@ class Post
 
     public static function all()
     {
-        return collect(File::files(resource_path('/posts')))
+        //To check caching, use cmd "php artisan tinker" and then use "cache('posts.all')", and to clear it use cache()->forget('posts.all')  
+        return cache()->rememberForever('posts.all', function () {
+            return collect(File::files(resource_path('/posts')))
             //find all of the posts in the post directory, map over them, parse into a document
             ->map(fn ($file) => YamlFrontMatter::parseFile($file))
             //map over documents to use post object
@@ -40,7 +42,10 @@ class Post
                 $document->date,
                 $document->body(),
                 $document->slug
-            ));
+            ))
+            ->sortbyDesc('date');
+        });
+        
     }
 
     public static function find($slug)
